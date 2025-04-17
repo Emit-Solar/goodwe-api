@@ -1,0 +1,21 @@
+[project]
+name = "goodwe-api"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "xyberii4",email = "61101529+xyberii4@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "requests (>=2.32.3,<3.0.0)",
+    "dotenv (>=0.9.9,<0.10.0)",
+    "python-dotenv (>=1.1.0,<2.0.0)"
+]
+
+[tools.poetry]
+packaged-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

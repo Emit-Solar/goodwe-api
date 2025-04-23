@@ -7,10 +7,12 @@ load_dotenv()
 class Config:
     GOODWE_USERNAME = os.getenv("GOODWE_USERNAME")
     GOODWE_PASSWORD = os.getenv("GOODWE_PASSWORD")
-    GOODWE_API_URL = "http://www.goodwe-power.com:82/api/v3"
+    GOODWE_API_URL = "http://hk.semsportal.com:82/api/"
     DEFAULT_HEADERS = {
         "Content-Type": "application/json",
         "Accept": "application/json",
+        "secret": "",
+        "token": "",
     }
 
     POSTGRES_IP = os.getenv("POSTGRES_IP")

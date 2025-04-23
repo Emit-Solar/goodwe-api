@@ -17,6 +17,9 @@ class Config:
 
     POSTGRES_IP = os.getenv("POSTGRES_IP")
     POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+    if POSTGRES_PORT:
+        POSTGRES_PORT = int(POSTGRES_PORT)
     POSTGRES_DB = os.getenv("POSTGRES_DB")
+    POSTGRES_SCHEMA = os.getenv("POSTGRES_SCHEMA")
     POSTGRES_USERNAME = os.getenv("POSTGRES_USERNAME")
     POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")

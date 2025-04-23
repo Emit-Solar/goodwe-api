@@ -126,7 +126,7 @@ class GoodWeClient:
         try:
             response = self.send_request(endpoint, headers, version="v2", data=data)
             self.log.info("Plant list retrieved successfully")
-            plant_num = response["data"]["page"]["records"]
+            plant_num = int(response["data"]["page"]["records"])
             return plant_num, response["data"]["rows"]
         except Exception as e:
             self.log.exception("Failed to get plant list", e)

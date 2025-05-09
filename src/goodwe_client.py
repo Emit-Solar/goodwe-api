@@ -26,7 +26,12 @@ class GoodWeClient:
         self.login()
 
     def send_request(
-        self, endpoint, headers, version="v3", data=None, method="POST"
+        self,
+        endpoint,
+        headers=None,
+        version="v3",
+        data=None,
+        method="POST",
     ) -> Dict[str, Any]:
         """
         Sends a request to the GoodWe API.
@@ -43,6 +48,9 @@ class GoodWeClient:
         try:
             if not self.logged_in and endpoint != "/Common/CrossLogin":
                 raise Exception("User not logged in")
+
+            if headers is None:
+                headers = self.default_headers
 
             url = f"{self.base_url}{version}{endpoint}"
 
@@ -88,6 +96,7 @@ class GoodWeClient:
         try:
             response = self.send_request(url, headers, data=data)
             self.token = json.dumps(response["data"])
+            self.default_headers["token"] = self.token
             self.logged_in = True
             self.log.info("Login successful")
         except Exception as e:
@@ -120,14 +129,29 @@ class GoodWeClient:
             }
         }
 
-        headers = self.default_headers.copy()
-        headers["token"] = self.token
-
         try:
-            response = self.send_request(endpoint, headers, version="v2", data=data)
+            response = self.send_request(endpoint, version="v2", data=data)
             self.log.info("Plant list retrieved successfully")
             plant_num = int(response["data"]["page"]["records"])
             return plant_num, response["data"]["rows"]
         except Exception as e:
             self.log.exception("Failed to get plant list", e)
+            raise e
+
+    def get_monitor_detail_by_powerstation_id(
+        self, psId
+    ) -> Dict[Dict[str, Any] | str, Any]:
+        endpoint = "/PowerStation/GetMonitorDetailByPowerstationId"
+        self.log.info(f"Calling {endpoint} with plantId: {psId}")
+
+        data = {
+            "powerstationId": psId,
+        }
+
+        try:
+            response = self.send_request(endpoint, data=data, version="v2")
+            self.log.info(f"Monitor detail retrieved for plantId: {psId}")
+            return response["data"]
+        except Exception as e:
+            self.log.exception(f"Failed to get monitor detail for plantId: {psId}", e)
             raise e

@@ -1,5 +1,6 @@
 import psycopg2
 from psycopg2 import sql
+import re
 
 
 class PostgreSQLClient:
@@ -15,7 +16,6 @@ class PostgreSQLClient:
 
         self.connect()
         self.create_schema()
-        self.create_tables()
 
     def connect(self):
         self.log.info("Connecting to PostgreSQL database...")
@@ -49,50 +49,76 @@ class PostgreSQLClient:
         self.connection.commit()
         self.log.info(f"Schema {self.schema} created or already exists")
 
-    def create_tables(self):
-        self.cursor.execute(
-            sql.SQL("""
-                CREATE TABLE IF NOT EXISTS {}.plant_list (
-                    plant_id TEXT PRIMARY KEY,
-                    plant_name TEXT,
-                    classification TEXT,
-                    plant_types TEXT,
-                    capacity NUMERIC,
-                    create_date DATE,
-                    latitude NUMERIC,
-                    longitude NUMERIC
-                )
-            """).format(sql.Identifier(self.schema))
+    def _flatten_dict(self, json_dict, parent_col="", columns=None):
+        """
+        Returns columns, types, and values from JSON dictionary.
+        """
+
+        data = {}
+        if columns is None:
+            columns = {}
+        for k, v in json_dict.items():
+            k_split = re.split(r"(?=[A-Z])", k)
+            k_fmt = "_".join(k_split)
+            col_name = (f"{parent_col}_{k_fmt}" if parent_col else k_fmt).lower()
+            col_type = "TEXT"
+
+            if isinstance(v, dict):
+                self._flatten_dict(v, parent_col=col_name, columns=columns)
+            elif isinstance(v, int):
+                col_type = "INT"
+            elif isinstance(v, float):
+                col_type = "NUMERIC"
+
+            columns[col_name] = col_type
+            data[col_name] = v
+
+        return columns, data
+
+    def create_table(self, table_name, json_dict):
+        columns, _ = self._flatten_dict(json_dict)
+
+        columns_str = ",\n".join([f"{k} {v}" for k, v in columns.items()])
+
+        create_query = sql.SQL(
+            """
+            CREATE TABLE IF NOT EXISTS {}.{} (
+                id SERIAL PRIMARY KEY,
+                {}
+            )
+            """
+        ).format(
+            sql.Identifier(self.schema),
+            sql.Identifier(table_name),
+            sql.SQL(columns_str),
         )
 
+        self.cursor.execute(create_query)
         self.connection.commit()
-        self.log.info(f"Table {self.schema}.plant_list created or already exists")
+        self.log.info(
+            f"Table {table_name} created or already exists in schema {self.schema}"
+        )
 
-    def insert_plant(self, plant_data):
+    def insert_data(self, table_name, json_data):
+        _, data = self._flatten_dict(json_data)
+        insert_query = sql.SQL(
+            """
+            INSERT INTO {}.{} ({})
+            VALUES ({})
+            ON CONFLICT DO NOTHING
+            """
+        ).format(
+            sql.Identifier(self.schema),
+            sql.Identifier(table_name),
+            sql.SQL(", ").join(sql.Identifier(k) for k in data.keys()),
+            sql.SQL(", ").join(sql.Placeholder() * len(data)),
+        )
+
         try:
-            query = sql.SQL("""
-                INSERT INTO {}.plant_list (
-                    plant_id, plant_name, classification, plant_types,
-                    capacity, create_date, latitude, longitude
-                ) VALUES (
-                    %(plantId)s, %(plantName)s, %(classification)s, %(plantTypes)s,
-                    %(capacity)s, %(createDate)s, %(latitude)s, %(longitude)s
-                )
-                ON CONFLICT (plant_id) DO UPDATE SET
-                    plant_name = EXCLUDED.plant_name,
-                    classification = EXCLUDED.classification,
-                    plant_types = EXCLUDED.plant_types,
-                    capacity = EXCLUDED.capacity,
-                    create_date = EXCLUDED.create_date,
-                    latitude = EXCLUDED.latitude,
-                    longitude = EXCLUDED.longitude;
-            """).format(sql.Identifier(self.schema))
-
-            self.cursor.execute(query, plant_data)
+            self.cursor.execute(insert_query, tuple(data.values()))
             self.connection.commit()
-            self.log.info(f"Inserted/Updated plant data: {plant_data['plantId']}")
-
+            self.log.info(f"Data inserted into {table_name}")
         except Exception as e:
             self.connection.rollback()
-            self.log.exception("Failed to insert plant data", e)
+            self.log.exception(f"Failed to insert data into {table_name}", e)
             raise e

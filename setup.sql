@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS __SCHEMA__.station_list (
     has_inverters BOOLEAN,
     capacity DECIMAL(10, 2),
     create_date TIMESTAMPTZ,
-    latitude TEXT,
-    longitude TEXT
+    latitude DECIMAL(10, 7),
+    longitude DECIMAL(10, 7)
 );
 
 CREATE TABLE IF NOT EXISTS __SCHEMA__.inverter_list(

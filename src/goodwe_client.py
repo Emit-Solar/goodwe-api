@@ -140,36 +140,6 @@ class GoodWeClient:
             self.log.exception("Failed to get plant list", e)
             raise e
 
-    def get_weather(self, plantId):
-        endpoint = "/PlantManage/GetWeather"
-        self.log.info(f"Calling {endpoint} with plantId: {plantId}")
-
-        data = {
-            "plantId": plantId,
-        }
-
-        try:
-            response = self.send_request(endpoint, data=data, version="v2")
-            self.log.info(f"Weather data retrieved for plantId: {plantId}")
-            return response["data"]
-        except Exception as e:
-            self.log.exception(f"Failed to get weather data for plantId: {plantId}", e)
-            raise e
-
-    def get_inverter_type(self, sn):
-        endpoint = "/PlantManage/GetInverterType"
-        self.log.info(f"Calling {endpoint} for SN: {sn}")
-
-        data = {"sn": sn}
-
-        try:
-            response = self.send_request(endpoint, data=data, version="v2")
-            self.log.info(f"Inverter type retrieved for SN: {sn}")
-            return response["data"]
-        except Exception as e:
-            self.log.exception(f"Failed to get inverter type for SN: {sn}", e)
-            raise e
-
     # /PowerStation
 
     def get_monitor_detail_by_powerstation_id(self, psId):
@@ -188,50 +158,20 @@ class GoodWeClient:
             self.log.exception(f"Failed to get monitor detail for plantId: {psId}", e)
             raise e
 
-    def get_equipment_by_psid(self, psId):
-        endpoint = "/PowerStation/GetEquipmentById"
-        self.log.info(f"Calling {endpoint} with plantId: {psId}")
+    # /Charts
 
-        data = {
-            "powerStationId": psId,
-        }
+    def get_plant_power_chart(self, id, date):
+        endpoint = "/Charts/GetPlantPowerChart"
+        self.log.info(f"Calling {endpoint} with plantId: {id} and date: {date}")
 
-        try:
-            response = self.send_request(endpoint, data=data, version="v2")
-            self.log.info(f"Equipment retrieved for plantId: {psId}")
-            return response["data"]
-        except Exception as e:
-            self.log.exception(f"Failed to get equipment for plantId: {psId}", e)
-            raise e
-
-    def get_power_flow(self, psId):
-        endpoint = "/PowerStation/GetPowerFlow"
-        self.log.info(f"Calling {endpoint} with plantId: {psId}")
-
-        data = {
-            "powerStationId": psId,
-        }
+        data = {"id": id, "date": date, "full_script": True}
 
         try:
             response = self.send_request(endpoint, data=data, version="v2")
-            self.log.info(f"Power flow retrieved for plantId: {psId}")
-            return response["data"]
+            self.log.info(f"Power chart retrieved for plantId: {id} on date: {date}")
+            return response["data"]["lines"]["xy"]
         except Exception as e:
-            self.log.exception(f"Failed to get power flow for plantId: {psId}", e)
-            raise e
-
-    def get_meter_list(self, psId):
-        endpoint = "/PowerStation/GetMeterList"
-        self.log.info(f"Calling {endpoint} with plantId: {psId}")
-
-        data = {
-            "powerStationId": psId,
-        }
-
-        try:
-            response = self.send_request(endpoint, data=data, version="v2")
-            self.log.info(f"Meter list retrieved for plantId: {psId}")
-            return response["data"]
-        except Exception as e:
-            self.log.exception(f"Failed to get meter list for plantId: {psId}", e)
+            self.log.exception(
+                f"Failed to get power chart for plantId: {id} on date: {date}", e
+            )
             raise e

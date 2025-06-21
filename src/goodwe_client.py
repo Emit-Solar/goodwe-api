@@ -169,7 +169,7 @@ class GoodWeClient:
         try:
             response = self.send_request(endpoint, data=data, version="v2")
             self.log.info(f"Power chart retrieved for plantId: {id} on date: {date}")
-            return response["data"]["lines"]["xy"]
+            return response["data"]["lines"][0]["xy"]
         except Exception as e:
             self.log.exception(
                 f"Failed to get power chart for plantId: {id} on date: {date}", e

@@ -65,6 +65,7 @@ class SQLClient:
         table_name: str,
         primary_keys: list[str],
     ):
+        self.log.info(f"Upserting data to {self.schema}.{table_name}")
         try:
             stmt = insert(
                 table=Table(

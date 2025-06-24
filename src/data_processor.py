@@ -1,6 +1,6 @@
 import polars as pl
 from datetime import datetime
-from model import GoodweModels
+from .model import GoodweModels
 from decimal import Decimal
 
 

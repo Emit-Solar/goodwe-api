@@ -36,19 +36,23 @@ class GoodweDataProcessor:
     def process_plant_power_chart(self, station_id, date, plant_power_chart):
         self.log.info(f"Processing power chart for station {station_id} on {date}")
         all_entries = []
-        for i in range(len(plant_power_chart)):
-            entry = plant_power_chart[i]
-            ts_str = f"{date} {entry["x"]}:00"
-            ts_obj = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
-            all_entries.append(
-                {
-                    "collect_time": ts_obj,
-                    "station_id": station_id,
-                    "power": Decimal(entry["y"]),
-                }
-            )
+        if len(plant_power_chart) != 0:
+            for i in range(len(plant_power_chart)):
+                entry = plant_power_chart[i]
+                ts_str = f"{date} {entry["x"]}:00"
+                ts_obj = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
+                all_entries.append(
+                    {
+                        "collect_time": ts_obj,
+                        "station_id": station_id,
+                        "power": Decimal(entry["y"]),
+                    }
+                )
 
-        power_lf = pl.LazyFrame(all_entries, schema=GoodweModels.station_realtime_power)
-        result = power_lf.collect()
-        self.log.info(f"Processed power chart for station {station_id} on {date}")
-        return result
+            power_lf = pl.LazyFrame(
+                all_entries, schema=GoodweModels.station_realtime_power
+            )
+            result = power_lf.collect()
+            self.log.info(f"Processed power chart for station {station_id} on {date}")
+            return result
+        return None
